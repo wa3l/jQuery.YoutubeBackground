@@ -101,11 +101,8 @@ if (typeof Object.create !== "function") {
      */
     init: function init(node, userOptions) {
       var self = this;
-
       self.userOptions = userOptions;
-
-      self.$body = $('body'),
-      self.$node = $(node),
+      self.$node = $(node);
       self.$window = $(window);
 
       // Setup event defaults with the reference to this
@@ -125,8 +122,6 @@ if (typeof Object.create !== "function") {
         },
         'onStateChange': function(e) {
           if (e.data === 1) {
-
-            self.$node.find('img').fadeOut(400);
             self.$node.addClass('loaded');
           } else if (e.data === 0 && self.options.repeat) { // video ended and repeat option is set true
             self.player.seekTo(self.options.start);
@@ -202,7 +197,7 @@ if (typeof Object.create !== "function") {
     createBackgroundVideo: function createBackgroundVideo() {
       /*jshint multistr: true */
       var self = this,
-        $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" class="ytplayer-container background">\
+        $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" class="ytplayer-container">\
                                     <div id="' + self.holderID + '" class="ytplayer-player"></div>\
                                     </div>\
                                     <div id="ytplayer-shield" class="ytplayer-shield"></div>');
@@ -294,7 +289,6 @@ if (typeof Object.create !== "function") {
 
       $(window).off('resize.YTplayer' + self.ID);
       $(window).off('scroll.YTplayer' + self.ID);
-      self.$body = null;
       self.$node = null;
       self.$YTPlayerString = null;
       self.player.destroy();
