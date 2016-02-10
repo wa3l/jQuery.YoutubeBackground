@@ -262,7 +262,9 @@ if (typeof Object.create !== "function") {
       if (this.options.mute) {
         e.target.mute();
       }
-      e.target.playVideo();
+      if (this.options.playerVars && this.options.playerVars.autoplay) {
+        e.target.playVideo();
+      }
     },
 
     /**
