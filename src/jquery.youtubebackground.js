@@ -133,11 +133,8 @@ if (typeof Object.create !== 'function') {
 			self.ID = (new Date()).getTime();
 			self.holderID = 'YTPlayer-ID-' + self.ID;
 
-			if (self.options.fitToBackground) {
-				self.createBackgroundVideo();
-			} else {
-				self.createContainerVideo();
-			}
+			self.createBackgroundVideo();
+
 			// Listen for Resize Event
 			self.$window.on('resize.YTplayer' + self.ID, function() {
 				self.resize(self);
@@ -172,24 +169,6 @@ if (typeof Object.create !== 'function') {
 		},
 
 		/**
-		 * @function createContainerVideo
-		 * Adds HTML for video in a container
-		 */
-		createContainerVideo: function createContainerVideo() {
-			var self = this;
-
-			/*jshint multistr: true */
-			var $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" >\
-									<div id="' + self.holderID + '" class="ytplayer-player"></div>\
-									</div>\
-									<div id="ytplayer-shield" class="ytplayer-shield"></div>');
-
-			self.$node.append($YTPlayerString);
-			self.$YTPlayerString = $YTPlayerString;
-			$YTPlayerString = null;
-		},
-
-		/**
 		 * @function createBackgroundVideo
 		 * Adds HTML for video background
 		 */
@@ -197,7 +176,7 @@ if (typeof Object.create !== 'function') {
 			var self = this;
 
 			/*jshint multistr: true */
-			var $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" class="ytplayer-container">\
+			var $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '">\
 									<div id="' + self.holderID + '" class="ytplayer-player"></div>\
 									</div>\
 									<div id="ytplayer-shield" class="ytplayer-shield"></div>');
@@ -218,8 +197,8 @@ if (typeof Object.create !== 'function') {
 				container = self.$node;
 			}
 
-			var width = container.width(),
-				height = container.height(),
+			var width = container.outerWidth(),
+				height = container.outerHeight(),
 				pWidth,                        // player width, to be defined
 				pHeight,                       // player height, tbd
 				$YTPlayerPlayer = $('#' + self.holderID);
