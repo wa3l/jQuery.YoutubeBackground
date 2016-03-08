@@ -10,316 +10,313 @@
  */
 
 // Chain of Responsibility pattern. Creates base class that can be overridden.
-if (typeof Object.create !== "function") {
-  Object.create = function(obj) {
-    function F() {}
-    F.prototype = obj;
-    return new F();
-  };
+if (typeof Object.create !== 'function') {
+	Object.create = function(obj) {
+		function F() {}
+		F.prototype = obj;
+		return new F();
+	};
 }
 
 (function($, window, document) {
-  var
-    loadAPI = function loadAPI(callback) {
+	var
+	loadAPI = function loadAPI(callback) {
 
-      // Load Youtube API
-      var tag = document.createElement('script'),
-      head = document.getElementsByTagName('head')[0];
-      
-      if(window.location.origin == 'file://') {
-        tag.src = 'http://www.youtube.com/iframe_api';
-      } else {
-        tag.src = '//www.youtube.com/iframe_api';
-      }
-      
-      head.appendChild(tag);
+		// Load Youtube API
+		var tag = document.createElement('script'),
+		head = document.getElementsByTagName('head')[0];
 
-      // Clean up Tags.
-      head = null;
-      tag = null;
+		if(window.location.origin == 'file://') {
+			tag.src = 'http://www.youtube.com/iframe_api';
+		} else {
+			tag.src = '//www.youtube.com/iframe_api';
+		}
 
-      iframeIsReady(callback);
-    },
-    iframeIsReady = function iframeIsReady(callback) {
-      // Listen for Gobal YT player callback
-      if (typeof YT === 'undefined' && typeof window.loadingPlayer === 'undefined') {
-        // Prevents Ready Event from being called twice
-        window.loadingPlayer = true;
+		head.appendChild(tag);
+		// Clean up Tags.
+		head = null;
+		tag = null;
 
-        
-        // Creates deferred so, other players know when to wait.
-        window.dfd = $.Deferred();
-        window.onYouTubeIframeAPIReady = function() {
-          window.onYouTubeIframeAPIReady = null;
-          window.dfd.resolve( "done" );
-          callback();
-        };
-      } else if (typeof YT === 'object')  {
-        callback();
-      } else {
-        window.dfd.done(function( name ) {
-          callback();
-        });
-      }
-    };
+		iframeIsReady(callback);
+	},
+	iframeIsReady = function iframeIsReady(callback) {
+		// Listen for Gobal YT player callback
+		if (typeof YT === 'undefined' && typeof window.loadingPlayer === 'undefined') {
+			// Prevents Ready Event from being called twice
+			window.loadingPlayer = true;
 
-  // YTPlayer Object
-  YTPlayer = {
-    player: null,
+			// Creates deferred so, other players know when to wait.
+			window.dfd = $.Deferred();
+			window.onYouTubeIframeAPIReady = function() {
+				window.onYouTubeIframeAPIReady = null;
+				window.dfd.resolve('done');
+				callback();
+			};
+		} else if (typeof YT === 'object')  {
+			callback();
+		} else {
+			window.dfd.done(function( name ) {
+				callback();
+			});
+		}
+	};
 
-    // Defaults
-    defaults: {
-      ratio: 16 / 9,
-      videoId: 'LSmgKRx5pBo',
-      mute: true,
-      repeat: true,
-      width: $(window).width(),
-      playButtonClass: 'YTPlayer-play',
-      pauseButtonClass: 'YTPlayer-pause',
-      muteButtonClass: 'YTPlayer-mute',
-      volumeUpClass: 'YTPlayer-volume-up',
-      volumeDownClass: 'YTPlayer-volume-down',
-      start: 0,
-      pauseOnScroll: false,
-      fitToBackground: true,
-      playerVars: {
-        iv_load_policy: 3,
-        modestbranding: 1,
-        autoplay: 1,
-        controls: 0,
-        showinfo: 0,
-        wmode: 'opaque',
-        branding: 0,
-        autohide: 0
-      },
-      events: null
-    },
+	// YTPlayer Object
+	YTPlayer = {
+		player: null,
 
-    /**
-     * @function init
-     * Intializes YTPlayer object
-     */
-    init: function init(node, userOptions) {
-      var self = this;
-      self.userOptions = userOptions;
-      self.$node = $(node);
-      self.$window = $(window);
+		// Defaults
+		defaults: {
+			ratio: 16 / 9,
+			videoId: 'LSmgKRx5pBo',
+			mute: true,
+			repeat: true,
+			width: $(window).width(),
+			playButtonClass: 'YTPlayer-play',
+			pauseButtonClass: 'YTPlayer-pause',
+			muteButtonClass: 'YTPlayer-mute',
+			volumeUpClass: 'YTPlayer-volume-up',
+			volumeDownClass: 'YTPlayer-volume-down',
+			start: 0,
+			pauseOnScroll: false,
+			fitToBackground: true,
+			playerVars: {
+				iv_load_policy: 3,
+				modestbranding: 1,
+				autoplay: 1,
+				controls: 0,
+				showinfo: 0,
+				wmode: 'opaque',
+				branding: 0,
+				autohide: 0
+			},
+			events: null
+		},
 
-      // Setup event defaults with the reference to this
-      self.defaults.events = {
-        'onReady': function(e) {
-          self.onPlayerReady(e);
+		/**
+		 * @function init
+		 * Intializes YTPlayer object
+		 */
+		init: function init(node, userOptions) {
+			var self = this;
+			self.userOptions = userOptions;
+			self.$node = $(node);
+			self.$window = $(window);
 
-          // setup up pause on scroll
-          if (self.options.pauseOnScroll) {
-            self.pauseOnScroll();
-          }
+			// Setup event defaults with the reference to this
+			self.defaults.events = {
+				'onReady': function(e) {
+					self.onPlayerReady(e);
 
-          // Callback for when finished
-          if (typeof self.options.callback == 'function') {
-            self.options.callback.call(this);
-          }
-        },
-        'onStateChange': function(e) {
-          if (e.data === 1) {
-            self.$node.addClass('loaded');
-          } else if (e.data === 0 && self.options.repeat) { // video ended and repeat option is set true
-            self.player.seekTo(self.options.start);
-          }
-        }
-      }
+					// setup up pause on scroll
+					if (self.options.pauseOnScroll) {
+						self.pauseOnScroll();
+					}
+
+					// Callback for when finished
+					if (typeof self.options.callback == 'function') {
+						self.options.callback.call(this);
+					}
+				},
+				'onStateChange': function(e) {
+					if (e.data === 1) {
+						self.$node.addClass('loaded');
+					} else if (e.data === 0 && self.options.repeat) { // video ended and repeat option is set true
+						self.player.seekTo(self.options.start);
+					}
+				}
+			}
 
 
-      self.options = $.extend(true, {}, self.defaults, self.userOptions);
-      self.options.height = Math.ceil(self.options.width / self.options.ratio);
-      self.ID = (new Date()).getTime();
-      self.holderID = 'YTPlayer-ID-' + self.ID;
+			self.options = $.extend(true, {}, self.defaults, self.userOptions);
+			self.options.height = Math.ceil(self.options.width / self.options.ratio);
+			self.ID = (new Date()).getTime();
+			self.holderID = 'YTPlayer-ID-' + self.ID;
 
-      if (self.options.fitToBackground) {
-        self.createBackgroundVideo();
-      } else {
-        self.createContainerVideo();
-      }
-      // Listen for Resize Event
-      self.$window.on('resize.YTplayer' + self.ID, function() {
-        self.resize(self);
-      });
+			if (self.options.fitToBackground) {
+				self.createBackgroundVideo();
+			} else {
+				self.createContainerVideo();
+			}
+			// Listen for Resize Event
+			self.$window.on('resize.YTplayer' + self.ID, function() {
+				self.resize(self);
+			});
 
-      loadAPI(self.onYouTubeIframeAPIReady.bind(self));
+			loadAPI(self.onYouTubeIframeAPIReady.bind(self));
 
-      self.resize(self);
+			self.resize(self);
 
-      return self;
-    },
+			return self;
+		},
 
 
-    /**
-     * @function pauseOnScroll
-     * Adds window events to pause video on scroll.
-     */
-    pauseOnScroll: function pauseOnScroll() {
-      var self = this;
-      self.$window.on('scroll.YTplayer' + self.ID, function() {
-        var state = self.player.getPlayerState();
-        if (state === 1) {
-          self.player.pauseVideo();
-        }
-      });
-      self.$window.scrollStopped(function(){
-        var state = self.player.getPlayerState();
-        if (state === 2) {
-          self.player.playVideo();
-        }
-      });
-    },
-    /**
-     * @function createContainerVideo
-     * Adds HTML for video in a container
-     */
-    createContainerVideo: function createContainerVideo() {
-      var self = this;
+		/**
+		 * @function pauseOnScroll
+		 * Adds window events to pause video on scroll.
+		 */
+		pauseOnScroll: function pauseOnScroll() {
+			var self = this;
+			self.$window.on('scroll.YTplayer' + self.ID, function() {
+				var state = self.player.getPlayerState();
+				if (state === 1) {
+					self.player.pauseVideo();
+				}
+			});
+			self.$window.scrollStopped(function() {
+				var state = self.player.getPlayerState();
+				if (state === 2) {
+					self.player.playVideo();
+				}
+			});
+		},
 
-      /*jshint multistr: true */
-      var $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" >\
-                                    <div id="' + self.holderID + '" class="ytplayer-player"></div> \
-                                    </div> \
-                                    <div id="ytplayer-shield" class="ytplayer-shield"></div>');
+		/**
+		 * @function createContainerVideo
+		 * Adds HTML for video in a container
+		 */
+		createContainerVideo: function createContainerVideo() {
+			var self = this;
 
-      self.$node.append($YTPlayerString);
-      self.$YTPlayerString = $YTPlayerString;
-      $YTPlayerString = null;
-    },
+			/*jshint multistr: true */
+			var $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" >\
+									<div id="' + self.holderID + '" class="ytplayer-player"></div>\
+									</div>\
+									<div id="ytplayer-shield" class="ytplayer-shield"></div>');
 
-    /**
-     * @function createBackgroundVideo
-     * Adds HTML for video background
-     */
-    createBackgroundVideo: function createBackgroundVideo() {
-      /*jshint multistr: true */
-      var self = this,
-        $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" class="ytplayer-container">\
-                                    <div id="' + self.holderID + '" class="ytplayer-player"></div>\
-                                    </div>\
-                                    <div id="ytplayer-shield" class="ytplayer-shield"></div>');
+			self.$node.append($YTPlayerString);
+			self.$YTPlayerString = $YTPlayerString;
+			$YTPlayerString = null;
+		},
 
-      self.$node.append($YTPlayerString);
-      self.$YTPlayerString = $YTPlayerString;
-      $YTPlayerString = null;
-    },
+		/**
+		 * @function createBackgroundVideo
+		 * Adds HTML for video background
+		 */
+		createBackgroundVideo: function createBackgroundVideo() {
+			var self = this;
 
-    /**
-     * @function resize
-     * Resize event to change video size
-     */
-    resize: function resize(self) {
-      //var self = this;
-      var container = $(window);
+			/*jshint multistr: true */
+			var $YTPlayerString = $('<div id="ytplayer-container' + self.ID + '" class="ytplayer-container">\
+									<div id="' + self.holderID + '" class="ytplayer-player"></div>\
+									</div>\
+									<div id="ytplayer-shield" class="ytplayer-shield"></div>');
 
-      if (!self.options.fitToBackground) {
-        container = self.$node;
-      }
+		  self.$node.append($YTPlayerString);
+		  self.$YTPlayerString = $YTPlayerString;
+		  $YTPlayerString = null;
+		},
 
-      var width = container.width(),
-        pWidth, // player width, to be defined
-        height = container.height(),
-        pHeight, // player height, tbd
-        $YTPlayerPlayer = $('#' + self.holderID);
+		/**
+		 * @function resize
+		 * Resize event to change video size
+		 */
+		resize: function resize(self) {
+			var container = $(window);
 
-      // when screen aspect ratio differs from video, video must center and underlay one dimension
-      if (width / self.options.ratio < height) {
-        pWidth = Math.ceil(height * self.options.ratio); // get new player width
-        $YTPlayerPlayer.width(pWidth).height(height).css({
-          left: (width - pWidth) / 2,
-          top: 0
-        }); // player width is greater, offset left; reset top
-      } else { // new video width < window width (gap to right)
-        pHeight = Math.ceil(width / self.options.ratio); // get new player height
-        $YTPlayerPlayer.width(width).height(pHeight).css({
-          left: 0,
-          top: (height - pHeight) / 2
-        }); // player height is greater, offset top; reset left
-      }
+			if (!self.options.fitToBackground) {
+				container = self.$node;
+			}
 
-      $YTPlayerPlayer = null;
-      container = null;
-    },
+			var width = container.width(),
+				height = container.height(),
+				pWidth,                        // player width, to be defined
+				pHeight,                       // player height, tbd
+				$YTPlayerPlayer = $('#' + self.holderID);
 
-    /**
-     * @function onYouTubeIframeAPIReady
-     * @ params {object} YTPlayer object for access to options
-     * Youtube API calls this function when the player is ready.
-     */
-    onYouTubeIframeAPIReady: function onYouTubeIframeAPIReady() {
-      var self = this;
-      self.player = new window.YT.Player(self.holderID, self.options);  
-    },
+			// when screen aspect ratio differs from video, video must center and underlay one dimension
+			if (width / self.options.ratio < height) {
+				pWidth = Math.ceil(height * self.options.ratio); // get new player width
+				$YTPlayerPlayer.width(pWidth).height(height).css({
+					left: (width - pWidth) / 2,
+					top: 0
+				}); // player width is greater, offset left; reset top
+			} else { // new video width < window width (gap to right)
+				pHeight = Math.ceil(width / self.options.ratio); // get new player height
+				$YTPlayerPlayer.width(width).height(pHeight).css({
+					left: 0,
+					top: (height - pHeight) / 2
+				}); // player height is greater, offset top; reset left
+			}
 
-    /**
-     * @function onPlayerReady
-     * @ params {event} window event from youtube player
-     */
-    onPlayerReady: function onPlayerReady(e) {
-      if (this.options.mute) {
-        e.target.mute();
-      }
-      if (this.options.playerVars && this.options.playerVars.autoplay) {
-        e.target.playVideo();
-      }
-    },
+			$YTPlayerPlayer = null;
+			container = null;
+		},
 
-    /**
-     * @function getPlayer
-     * returns youtube player
-     */
-    getPlayer: function getPlayer() {
-      return this.player;
-    },
+		/**
+		 * @function onYouTubeIframeAPIReady
+		 * @ params {object} YTPlayer object for access to options
+		 * Youtube API calls this function when the player is ready.
+		 */
+		onYouTubeIframeAPIReady: function onYouTubeIframeAPIReady() {
+			var self = this;
+			self.player = new window.YT.Player(self.holderID, self.options);
+		},
 
-    /**
-     * @function destroy
-     * destroys all!
-     */
-    destroy: function destroy() {
-      var self = this;
+		/**
+		 * @function onPlayerReady
+		 * @ params {event} window event from youtube player
+		 */
+		onPlayerReady: function onPlayerReady(e) {
+			if (this.options.mute) {
+				e.target.mute();
+			}
+			if (this.options.playerVars && this.options.playerVars.autoplay) {
+				e.target.playVideo();
+			}
+		},
 
-      self.$node
-        .removeData('yt-init')
-        .removeData('ytPlayer')
-        .removeClass('loaded');
+		/**
+		 * @function getPlayer
+		 * returns youtube player
+		 */
+		getPlayer: function getPlayer() {
+			return this.player;
+		},
 
-      self.$YTPlayerString.remove();
+		/**
+		 * @function destroy
+		 * destroys all!
+		 */
+		destroy: function destroy() {
+			var self = this;
 
-      $(window).off('resize.YTplayer' + self.ID);
-      $(window).off('scroll.YTplayer' + self.ID);
-      self.$node = null;
-      self.$YTPlayerString = null;
-      self.player.destroy();
-      self.player = null;
-    }
-  };
+			self.$node
+				.removeData('yt-init')
+				.removeData('ytPlayer')
+				.removeClass('loaded');
 
-  // Scroll Stopped event.
-  $.fn.scrollStopped = function(callback) {
-    var $this = $(this), self = this;
-    $this.scroll(function(){
-      if ($this.data('scrollTimeout')) {
-        clearTimeout($this.data('scrollTimeout'));
-      }
-      $this.data('scrollTimeout', setTimeout(callback,250,self));
-    });
-  };
+			self.$YTPlayerString.remove();
 
-  // Create plugin
-  $.fn.YTPlayer = function(options) {
+			$(window).off('resize.YTplayer' + self.ID);
+			$(window).off('scroll.YTplayer' + self.ID);
+			self.$node = null;
+			self.$YTPlayerString = null;
+			self.player.destroy();
+			self.player = null;
+		}
+	};
 
-    return this.each(function() {
-      var el = this;
+	// Scroll Stopped event.
+	$.fn.scrollStopped = function(callback) {
+		var $this = $(this), self = this;
+		$this.scroll(function(){
+			if ($this.data('scrollTimeout')) {
+				clearTimeout($this.data('scrollTimeout'));
+			}
+			$this.data('scrollTimeout', setTimeout(callback,250,self));
+		});
+	};
 
-      $(el).data("yt-init", true);
-      var player = Object.create(YTPlayer);
-      player.init(el, options);
-      $.data(el, "ytPlayer", player);
-    });
-  };
+	// Create plugin
+	$.fn.YTPlayer = function(options) {
+		return this.each(function() {
+			var el = this;
+			$(el).data('yt-init', true);
+			var player = Object.create(YTPlayer);
+			player.init(el, options);
+			$.data(el, 'ytPlayer', player);
+		});
+	};
 
 })(jQuery, window, document);
